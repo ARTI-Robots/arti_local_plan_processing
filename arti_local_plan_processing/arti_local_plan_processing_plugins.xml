@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<library path="lib/libarti_local_plan_processing">
+
+  <class name="arti_local_plan_processing/AccelerationPostProcessing"
+         type="arti_local_plan_processing::AccelerationPostProcessing"
+         base_class_type="arti_nav_core::BaseLocalPlannerPostProcessing">
+    <description>
+      Ensures that the robot properly applies acceleration/deceleration
+    </description>
+  </class>
+
+</library>
