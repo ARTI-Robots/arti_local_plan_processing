@@ -33,15 +33,18 @@ public:
     const arti_nav_core_msgs::Twist2DWithLimits& final_twist,
     arti_nav_core_msgs::Trajectory2DWithLimits& new_trajectory) override;
 private:
+  static const char LOGGER_NAME[];
+  
   void reconfigure(const arti_local_plan_processing::AccelerationPostProcessingConfig& new_config);
 
-  static double getBrakingDistance(double v_prev, double v_next, double acceleration);
+  void processTrajectory(std::vector<arti_nav_core_msgs::Movement2DWithLimits>& path_element);
 
+  static double getBrakingDistance(double v_prev, double v_next, double acceleration);
   ros::NodeHandle private_nh_;
 
   std::unique_ptr<dynamic_reconfigure::Server<arti_local_plan_processing::AccelerationPostProcessingConfig>> cfg_server_;
   arti_local_plan_processing::AccelerationPostProcessingConfig cfg_;
-
+  
   ros::Publisher pub_input_path_;
   ros::Publisher pub_output_path_;
 };

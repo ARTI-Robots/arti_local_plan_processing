@@ -65,7 +65,7 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 ## Set required version of C++ standard
 set_target_properties(${PROJECT_NAME} PROPERTIES
-  CXX_STANDARD 14
+  CXX_STANDARD 17
   CXX_STANDARD_REQUIRED YES
 )
 
@@ -121,9 +121,25 @@ target_link_libraries(${PROJECT_NAME}
 ## Testing ##
 #############
 
-## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-acceleration-post-processing-test test/acceleration_post_processing_test.cpp)
-target_link_libraries(${PROJECT_NAME}-acceleration-post-processing-test ${catkin_LIBRARIES}) #${PROJECT_NAME}
+## Add gtest based cpp test target and link libraries## Add gtest based cpp test target and link libraries
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  # Acceleration post-processing
+  add_rostest_gtest(${PROJECT_NAME}-acceleration-post-processing-test 
+                    test/acceleration_post_processing.test
+                    test/acceleration_post_processing_test.cpp)
+  
+  target_link_libraries(${PROJECT_NAME}-acceleration-post-processing-test ${PROJECT_NAME} ${catkin_LIBRARIES} )
+  
+  set_target_properties(${PROJECT_NAME}-acceleration-post-processing-test PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+  )
+  ## Add folders to be run by python nosetests
+  # catkin_add_nosetests(test)
+endif()
+#target_link_libraries(${PROJECT_NAME}-acceleration-post-processing-test ${catkin_LIBRARIES}) #${PROJECT_NAME}
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)

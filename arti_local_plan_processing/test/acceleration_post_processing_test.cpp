@@ -26,6 +26,8 @@ TEST(AccelerationPostProcessingTest, PositiveRamp)
     old_trajectory.movements.push_back(movement_1);
   }
 
+  old_trajectory.movements.back().twist.x.value = 0.;
+
   arti_nav_core_msgs::Twist2DWithLimits final_twist;
   arti_nav_core_msgs::Trajectory2DWithLimits new_trajectory;
   arti_nav_core::BaseLocalPlannerPostProcessing::BaseLocalPlannerPostProcessingErrorEnum result = post_processing.makeTrajectory(
@@ -60,6 +62,7 @@ TEST(AccelerationPostProcessingTest, NegativeRamp)
     movement_1.twist.x.value = -1. * (i > 0 ? 1. : 0.);
     old_trajectory.movements.push_back(movement_1);
   }
+  old_trajectory.movements.back().twist.x.value = 0.;
 
   arti_nav_core_msgs::Twist2DWithLimits final_twist;
   arti_nav_core_msgs::Trajectory2DWithLimits new_trajectory;
@@ -80,6 +83,65 @@ TEST(AccelerationPostProcessingTest, NegativeRamp)
             arti_nav_core::BaseLocalPlannerPostProcessing::BaseLocalPlannerPostProcessingErrorEnum::TRAJECTORY_POST_PROCESSED);
 }
 
+
+TEST(AccelerationPostProcessingTest, CombinationRamp)
+{
+  arti_local_plan_processing::AccelerationPostProcessing post_processing;
+  post_processing.initialize("post_processing", nullptr, nullptr);
+
+  arti_nav_core_msgs::Trajectory2DWithLimits old_trajectory;
+  for (size_t i = 0; i < 30; ++i)
+  {
+  arti_nav_core_msgs::Movement2DWithLimits movement_1;
+  movement_1.pose.point.x.value = (29.0*0.125) + ( static_cast<double>(i) * -0.125);
+  movement_1.pose.point.y.value = (29.0*0.125) + ( static_cast<double>(i) * -0.125);
+  movement_1.pose.theta.value = 0.;
+  movement_1.twist.x.value = -1. * (i > 0 ? 1. : 0.);
+  old_trajectory.movements.push_back(movement_1);
+  }
+  for (size_t i = 1; i <= 60; ++i)
+  {
+  arti_nav_core_msgs::Movement2DWithLimits movement_1;
+  movement_1.pose.point.x.value = static_cast<double>(i) * 0.125;
+  movement_1.pose.point.y.value = static_cast<double>(i) * 0.125;
+  movement_1.pose.theta.value = 0.;
+  movement_1.twist.x.value = 1. ; //* (i > 0 ? 1. : 0.);
+  old_trajectory.movements.push_back(movement_1);
+  }
+
+  old_trajectory.movements.back().twist.x.value = 0.;
+
+  arti_nav_core_msgs::Twist2DWithLimits final_twist;
+  arti_nav_core_msgs::Trajectory2DWithLimits new_trajectory;
+  arti_nav_core::BaseLocalPlannerPostProcessing::BaseLocalPlannerPostProcessingErrorEnum result = post_processing.makeTrajectory(
+    old_trajectory, final_twist, new_trajectory);
+
+  ASSERT_FLOAT_EQ(new_trajectory.movements[0].twist.x.value, 0.);
+  ASSERT_FLOAT_EQ(new_trajectory.movements[1].twist.x.value, -0.594603557);
+  ASSERT_FLOAT_EQ(new_trajectory.movements[2].twist.x.value, -0.840896415);
+  for(size_t i = 3; i < 27; i++)
+  {
+    ASSERT_FLOAT_EQ(new_trajectory.movements[i].twist.x.value, -1.);
+  }
+  ASSERT_FLOAT_EQ(new_trajectory.movements[27].twist.x.value, -0.84089641);
+  ASSERT_FLOAT_EQ(new_trajectory.movements[28].twist.x.value, -0.594603557);
+  ASSERT_FLOAT_EQ(new_trajectory.movements[29].twist.x.value, 0.);//-0.05);
+  //sqrt((0.05^2)-2×1.0×sqrt(2×(2×0.125)^2))
+  ASSERT_FLOAT_EQ(new_trajectory.movements[30].twist.x.value, 0.594603557); //0.592497587);//
+  ASSERT_FLOAT_EQ(new_trajectory.movements[31].twist.x.value, 0.840896415); // 0.83940859); //
+  for(size_t i = 32; i < 87; ++i)
+  {
+    ASSERT_FLOAT_EQ(new_trajectory.movements[i].twist.x.value, 1.);
+  }
+  //sqrt((0.05^2)+2×1.0×sqrt(2×(2×0.125)^2)) if endvalue is set to be 0.05
+  ASSERT_FLOAT_EQ(new_trajectory.movements[87].twist.x.value,  0.840896415);// 0.842381613); //
+  //sqrt((0.05^2)+2×1.0×sqrt(2×(1×0.125)^2))
+  ASSERT_FLOAT_EQ(new_trajectory.movements[88].twist.x.value, 0.594603557);
+  ASSERT_FLOAT_EQ(new_trajectory.movements[89].twist.x.value, 0.);
+
+  ASSERT_EQ(result,
+    arti_nav_core::BaseLocalPlannerPostProcessing::BaseLocalPlannerPostProcessingErrorEnum::TRAJECTORY_POST_PROCESSED);
+}
 /**
  * This is currently just here so that some compiled code includes the package's header files, which helps IDEs display
  * them correctly.

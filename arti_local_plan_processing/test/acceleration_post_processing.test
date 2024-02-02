@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <test test-name="acceleration_post_processing_test" 
+        pkg="arti_local_plan_processing" 
+        type="arti_local_plan_processing-acceleration-post-processing-test" />
+</launch>
